@@ -18,7 +18,7 @@ public class ListNode extends SyntaxNode {
     }
 
     public void displaySubtree(int indentAmt) {
-        printIndented("List [", indentAmt);
+        printIndented("List[", indentAmt);
         for (SyntaxNode node : exprs)
         {
             node.displaySubtree(indentAmt + 2);
@@ -52,4 +52,5 @@ public class ListNode extends SyntaxNode {
         
      }
 }
+
 
