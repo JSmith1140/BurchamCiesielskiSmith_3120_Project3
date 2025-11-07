@@ -45,12 +45,14 @@ public class ListNode extends SyntaxNode {
         }
         return evaluatedList;
     }
-    
-     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer){
+
+    @Override
+    public Type typeOf(TypeEnvironment tenv, Inferencer inferencer){
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'evaluate'");
         
-     }
+    }
 }
+
 
 
