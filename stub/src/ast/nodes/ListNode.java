@@ -28,13 +28,28 @@ public class ListNode extends SyntaxNode {
 
     @Override
     public Object evaluate(Environment env) throws EvaluationException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'evaluate'");
-    }
+        List<Object> evaluatedList = new LinkedList<>();
+        Class<?> firstType = null;
 
+        for (SyntaxNode node : exprs) {
+            Object value = node.evaluate(env);
+
+            if (firstType == null && value != null)
+                firstType = value.getClass();
+
+            if (value != null && firstType != null && !firstType.equals(value.getClass())) {
+                logError("Type error: all elements in a list must be of the same type.");
+                throw new EvaluationException();
+            }
+            evaluatedList.add(value);
+        }
+        return evaluatedList;
+    }
+    
      public Type typeOf(TypeEnvironment tenv, Inferencer inferencer){
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'evaluate'");
         
      }
 }
+
