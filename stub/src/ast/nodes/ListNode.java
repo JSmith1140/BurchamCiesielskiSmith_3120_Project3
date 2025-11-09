@@ -1,6 +1,7 @@
 package ast.nodes;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import ast.EvaluationException;
 import ast.typesystem.TypeException;
@@ -53,6 +54,7 @@ public class ListNode extends SyntaxNode {
         
     }
 }
+
 
 
 
