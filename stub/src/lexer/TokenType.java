@@ -193,5 +193,10 @@ public enum TokenType {
     /**
      * Right bracket ]
      */
-    RBRACKET
+    RBRACKET,
+
+    /*
+     * COMMA ,
+     */
+    COMMA
 }
