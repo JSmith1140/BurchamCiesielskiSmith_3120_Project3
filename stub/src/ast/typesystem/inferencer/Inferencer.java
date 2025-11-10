@@ -19,6 +19,7 @@ package ast.typesystem.inferencer;
 import ast.typesystem.TypeException;
 import ast.typesystem.types.BoolType;
 import ast.typesystem.types.IntType;
+import ast.typesystem.types.ListType;
 import ast.typesystem.types.RealType;
 import ast.typesystem.types.Type;
 import ast.typesystem.types.VarType;
@@ -88,6 +89,14 @@ public class Inferencer
         if (type1.equals(type2))
             return;
 
+        // Handle list types - unify their element types
+        if (type1 instanceof ListType && type2 instanceof ListType)
+        {
+            unify(((ListType) type1).getElementType(),
+                  ((ListType) type2).getElementType(), msg);
+            return;
+        }
+
         // Bind type1 to type2 if possible.
         if (type1 instanceof VarType)
         {
@@ -129,6 +138,11 @@ public class Inferencer
         else if (ty instanceof VarType)
         {
             return !tv.equals((VarType) ty);
+        }
+        else if (ty instanceof ListType)
+        {
+            // Recursively check if tv appears in the element type
+            return noOccurrence(tv, ((ListType) ty).getElementType());
         }
     
         return false;

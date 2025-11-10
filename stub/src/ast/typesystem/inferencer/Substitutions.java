@@ -20,6 +20,7 @@ import java.util.HashMap;
 
 import ast.typesystem.types.BoolType;
 import ast.typesystem.types.IntType;
+import ast.typesystem.types.ListType;
 import ast.typesystem.types.RealType;
 import ast.typesystem.types.Type;
 import ast.typesystem.types.VarType;
@@ -75,6 +76,18 @@ public class Substitutions {
             Type res = subst.get((VarType) type);
             if (res != null)
                 return res;
+            return type;
+        }
+
+        // Handle list types - apply substitution to element type
+        else if (type instanceof ListType)
+        {
+            Type elementType = ((ListType) type).getElementType();
+            Type newElementType = apply(elementType);
+            
+            // If the element type changed, create a new ListType
+            if (newElementType != elementType)
+                return new ListType(newElementType);
             return type;
         }
 
@@ -139,6 +152,17 @@ public class Substitutions {
                 return currType;
         }
 
+        // Handle list type substitutions - propagate to element type
+        else if (currType instanceof ListType) {
+            Type elementType = ((ListType) currType).getElementType();
+            Type newElementType = propagateSubstitution(tv, newType, elementType);
+            
+            // If the element type changed, create a new ListType
+            if (newElementType != elementType)
+                return new ListType(newElementType);
+            return currType;
+        }
+
         // When in doubt, do nothing.
         return currType;
 
@@ -167,6 +191,13 @@ public class Substitutions {
 
             exSubst.put((VarType) type, tenv.getTypeVariable());
             return exSubst.get((VarType) type);
+        }
+
+        // Handle list types - externalize the element type
+        else if (type instanceof ListType) {
+            Type elementType = ((ListType) type).getElementType();
+            Type externalizedElementType = externalizeHelper(exSubst, tenv, elementType);
+            return new ListType(externalizedElementType);
         }
 
        else
