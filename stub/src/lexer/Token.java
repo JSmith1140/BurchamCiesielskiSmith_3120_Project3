@@ -177,6 +177,20 @@ public class Token
             return "IN";
         case EOF:
             return "EOF";
+        case HD:
+            return "HD";
+        case TL:
+            return "TL";
+        case LEN:
+            return "LEN";
+        case CONCAT:
+            return "CONCAT";
+        case LBRACKET:
+            return "LBRACKET";
+        case RBRACKET:
+            return "RBRACKET";
+        case COMMA:
+            return "COMMA";
         }
         return "";
     }
