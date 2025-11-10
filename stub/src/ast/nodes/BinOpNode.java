@@ -127,6 +127,23 @@ public final class BinOpNode extends SyntaxNode
             return (Boolean) lval && (Boolean) rval;
         case OR:
             return (Boolean) lval || (Boolean) rval;
+        case CONCAT:
+            if (lval instanceof java.util.List<?> leftList && rval instanceof java.util.List<?> rightList) {
+                if (!leftList.isEmpty() && !rightList.isEmpty()) {
+                    Class<?> leftType = leftList.get(0).getClass();
+                    Class<?> rightType = rightList.get(0).getClass();
+                    if (!leftType.equals(rightType)) {
+                        logError("Error: Concatenation requires two lists of the same element type.");
+                        throw new EvaluationException();
+                    }
+                }
+                java.util.List<Object> newList = new java.util.ArrayList<>(leftList);
+                newList.addAll(rightList);
+                return newList;
+            } else {
+                logError("Error: Concatenation requires two lists of the same element type.");
+                throw new EvaluationException();
+            }
         default:
             throw new EvaluationException();
         }
