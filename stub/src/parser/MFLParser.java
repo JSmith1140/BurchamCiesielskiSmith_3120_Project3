@@ -22,7 +22,11 @@ import java.util.LinkedList;
 
 import ast.SyntaxTree;
 import ast.nodes.BinOpNode;
+import ast.nodes.HeadNode;
+import ast.nodes.TailNode;
+import ast.nodes.LenNode;
 import ast.nodes.LetNode;
+import ast.nodes.ListNode;
 import ast.nodes.ProgNode;
 import ast.nodes.RelOpNode;
 import ast.nodes.SyntaxNode;
@@ -226,7 +230,7 @@ public class MFLParser extends Parser {
     expr = getGoodParse(evalTerm());
 
     op = getCurrToken().getType(); // This should be an operator.
-    while (checkMatch(TokenType.ADD) || checkMatch(TokenType.SUB)) {
+    while (checkMatch(TokenType.ADD) || checkMatch(TokenType.SUB) || checkMatch(TokenType.CONCAT)) {
       rterm = getGoodParse(evalTerm());
       expr = new BinOpNode(expr, op, rterm, getCurrLine());
       op = getCurrToken().getType(); // Save off the next operator(?).
@@ -312,11 +316,56 @@ public class MFLParser extends Parser {
             fact = new TokenNode(ident, getCurrLine());
 
         }
+
+        else if (checkMatch(TokenType.HD)) {
+          match(TokenType.LPAREN, "(");
+          SyntaxNode expr = getGoodParse(evalExpr());
+          match(TokenType.RPAREN, ")");
+          fact = new HeadNode(expr, getCurrLine());
+        }
+
+        else if (checkMatch(TokenType.TL)) {
+          match(TokenType.LPAREN, "(");
+          SyntaxNode expr = getGoodParse(evalExpr());
+          match(TokenType.RPAREN, ")");
+          fact = new TailNode(expr, getCurrLine());
+        }
+
+        else if (checkMatch(TokenType.LEN)) {
+          match(TokenType.LPAREN, "(");
+          SyntaxNode expr = getGoodParse(evalExpr());
+          match(TokenType.RPAREN, ")");
+          fact = new LenNode(expr, getCurrLine());
+        }
+
+        else if (tokenIs(TokenType.LBRACKET)) {
+            fact = getGoodParse(evalList());
+        }
             
         trace("Exit <factor>");
         return fact;
     }
 
+    private SyntaxNode evalList() throws ParseException {
+      trace("Enter <lexpr>");
+      LinkedList<SyntaxNode> elements = new LinkedList<>();
+
+      match(TokenType.LBRACKET, "["); 
+
+      // Check if the list is not empty
+      if (!tokenIs(TokenType.RBRACKET)) {
+          elements.add(getGoodParse(evalExpr())); 
+
+          while (checkMatch(TokenType.COMMA)) {
+              elements.add(getGoodParse(evalExpr()));
+          }
+      }
+
+      match(TokenType.RBRACKET, "]"); 
+
+      trace("Exit <lexpr>");
+      return new ListNode(elements, getCurrLine());
+  }
 
   /***********
    *
