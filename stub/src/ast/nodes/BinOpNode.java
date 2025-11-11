@@ -29,8 +29,7 @@ import lexer.TokenType;
  * 
  * @author Zach Kissel
  */
-public final class BinOpNode extends SyntaxNode
-{
+public final class BinOpNode extends SyntaxNode {
     private TokenType op;
     private SyntaxNode leftTerm;
     private SyntaxNode rightTerm;
@@ -44,8 +43,7 @@ public final class BinOpNode extends SyntaxNode
      * @param line  the line of code the node is associated with.
      */
     public BinOpNode(SyntaxNode lterm, TokenType op, SyntaxNode rterm,
-            long line)
-    {
+            long line) {
         super(line);
         this.op = op;
         this.leftTerm = lterm;
@@ -57,8 +55,7 @@ public final class BinOpNode extends SyntaxNode
      * 
      * @param indentAmt the amout of indentation to perform.
      */
-    public void displaySubtree(int indentAmt)
-    {
+    public void displaySubtree(int indentAmt) {
         printIndented("BinOp[" + op + "](", indentAmt);
         leftTerm.displaySubtree(indentAmt + 2);
         rightTerm.displaySubtree(indentAmt + 2);
@@ -74,13 +71,12 @@ public final class BinOpNode extends SyntaxNode
      */
     @Override
     public Object evaluate(Environment env) throws EvaluationException {
-               Object lval;
+        Object lval;
         Object rval;
         boolean useDouble = false;
 
         lval = leftTerm.evaluate(env);
         rval = rightTerm.evaluate(env);
-
 
         // Make sure the type is sound.
         if (!(lval instanceof Integer || lval instanceof Double
@@ -89,8 +85,7 @@ public final class BinOpNode extends SyntaxNode
                         || lval instanceof Boolean))
             throw new EvaluationException();
 
-        if (lval.getClass() != rval.getClass())
-        {
+        if (lval.getClass() != rval.getClass()) {
             logError("mixed type expression.");
             throw new EvaluationException();
         }
@@ -98,54 +93,52 @@ public final class BinOpNode extends SyntaxNode
             useDouble = true;
 
         // Perform the operation base on the type.
-        switch (op)
-        {
-        case ADD:
-            if (useDouble)
-                return (Double) lval + (Double) rval;
-            return (Integer) lval + (Integer) rval;
-        case SUB:
-            if (useDouble)
-                return (Double) lval - (Double) rval;
-            return (Integer) lval - (Integer) rval;
-        case MULT:
-            if (useDouble)
-                return (Double) lval * (Double) rval;
-            return (Integer) lval * (Integer) rval;
-        case DIV:
-            if (useDouble)
-                return (Double) lval / (Double) rval;
-            return (Integer) lval / (Integer) rval;
-        case MOD:
-            if (useDouble)
-            {
-                logError("Error: Mod requires integer arguments.");
-                throw new EvaluationException();
-            }
-            return (Integer) lval % (Integer) rval;
-        case AND:
-            return (Boolean) lval && (Boolean) rval;
-        case OR:
-            return (Boolean) lval || (Boolean) rval;
-        case CONCAT:
-            if (lval instanceof java.util.List<?> leftList && rval instanceof java.util.List<?> rightList) {
-                if (!leftList.isEmpty() && !rightList.isEmpty()) {
-                    Class<?> leftType = leftList.get(0).getClass();
-                    Class<?> rightType = rightList.get(0).getClass();
-                    if (!leftType.equals(rightType)) {
-                        logError("Error: Concatenation requires two lists of the same element type.");
-                        throw new EvaluationException();
-                    }
+        switch (op) {
+            case ADD:
+                if (useDouble)
+                    return (Double) lval + (Double) rval;
+                return (Integer) lval + (Integer) rval;
+            case SUB:
+                if (useDouble)
+                    return (Double) lval - (Double) rval;
+                return (Integer) lval - (Integer) rval;
+            case MULT:
+                if (useDouble)
+                    return (Double) lval * (Double) rval;
+                return (Integer) lval * (Integer) rval;
+            case DIV:
+                if (useDouble)
+                    return (Double) lval / (Double) rval;
+                return (Integer) lval / (Integer) rval;
+            case MOD:
+                if (useDouble) {
+                    logError("Error: Mod requires integer arguments.");
+                    throw new EvaluationException();
                 }
-                java.util.List<Object> newList = new java.util.ArrayList<>(leftList);
-                newList.addAll(rightList);
-                return newList;
-            } else {
-                logError("Error: Concatenation requires two lists of the same element type.");
+                return (Integer) lval % (Integer) rval;
+            case AND:
+                return (Boolean) lval && (Boolean) rval;
+            case OR:
+                return (Boolean) lval || (Boolean) rval;
+            case CONCAT:
+                if (lval instanceof java.util.List<?> leftList && rval instanceof java.util.List<?> rightList) {
+                    if (!leftList.isEmpty() && !rightList.isEmpty()) {
+                        Class<?> leftType = leftList.get(0).getClass();
+                        Class<?> rightType = rightList.get(0).getClass();
+                        if (!leftType.equals(rightType)) {
+                            logError("Error: Concatenation requires two lists of the same element type.");
+                            throw new EvaluationException();
+                        }
+                    }
+                    java.util.List<Object> newList = new java.util.ArrayList<>(leftList);
+                    newList.addAll(rightList);
+                    return newList;
+                } else {
+                    logError("Error: Concatenation requires two lists of the same element type.");
+                    throw new EvaluationException();
+                }
+            default:
                 throw new EvaluationException();
-            }
-        default:
-            throw new EvaluationException();
         }
 
     }
@@ -161,7 +154,69 @@ public final class BinOpNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        // Infer the type of both operands
+        Type leftType = leftTerm.typeOf(tenv, inferencer);
+        Type rightType = rightTerm.typeOf(tenv, inferencer);
+
+        // Attempt to unify them
+        inferencer.unify(leftType, rightType, "Binary operation operand mismatch");
+
+        // Apply the substitution map to reflect any updated constraints
+        leftType = inferencer.getSubstitutions().apply(leftType);
+        rightType = inferencer.getSubstitutions().apply(rightType);
+
+        switch (op) {
+            // Arithmetic operators
+            case ADD:
+            case SUB:
+            case MULT:
+            case DIV:
+                if (leftType instanceof ast.typesystem.types.IntType)
+                    return new ast.typesystem.types.IntType();
+                else if (leftType instanceof ast.typesystem.types.RealType)
+                    return new ast.typesystem.types.RealType();
+                else
+                    throw new TypeException(buildErrorMessage(
+                            "Arithmetic operations require Int or Real types, got: " + leftType));
+
+                // Modulus
+            case MOD:
+                if (leftType instanceof ast.typesystem.types.IntType)
+                    return new ast.typesystem.types.IntType();
+                else
+                    throw new TypeException(buildErrorMessage(
+                            "Modulus operation requires Int type, got: " + leftType));
+
+                // Logical operators
+            case AND:
+            case OR:
+                if (leftType instanceof ast.typesystem.types.BoolType)
+                    return new ast.typesystem.types.BoolType();
+                else
+                    throw new TypeException(buildErrorMessage(
+                            "Logical operation requires Bool type, got: " + leftType));
+
+                // List concatenation
+            case CONCAT:
+                // Get a fresh type variable from the type environment for list elements
+                ast.typesystem.types.VarType elemVar = tenv.getTypeVariable();
+                ast.typesystem.types.ListType listType = new ast.typesystem.types.ListType(elemVar);
+
+                // Ensure both sides are list types with compatible element types
+                inferencer.unify(leftType, listType, "List concatenation requires list operands");
+                inferencer.unify(rightType, listType, "List concatenation requires list operands");
+
+                // Apply substitutions
+                leftType = inferencer.getSubstitutions().apply(leftType);
+                rightType = inferencer.getSubstitutions().apply(rightType);
+
+                // Return the unified list type
+                return leftType;
+
+            // Unknown operation
+            default:
+                throw new TypeException(buildErrorMessage(
+                        "Unknown binary operator: " + op));
+        }
     }
 }
