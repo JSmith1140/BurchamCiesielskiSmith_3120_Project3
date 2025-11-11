@@ -29,8 +29,7 @@ import lexer.TokenType;
  * 
  * @author Zach Kissel
  */
-public final class UnaryOpNode extends SyntaxNode
-{
+public final class UnaryOpNode extends SyntaxNode {
     private TokenType op;
     private SyntaxNode expr;
 
@@ -41,8 +40,7 @@ public final class UnaryOpNode extends SyntaxNode
      * @param op   the binary operation to perform.
      * @param line the line of code the node is associated with.
      */
-    public UnaryOpNode(SyntaxNode expr, TokenType op, long line)
-    {
+    public UnaryOpNode(SyntaxNode expr, TokenType op, long line) {
         super(line);
         this.op = op;
         this.expr = expr;
@@ -53,8 +51,7 @@ public final class UnaryOpNode extends SyntaxNode
      * 
      * @param indentAmt the amout of indentation to perform.
      */
-    public void displaySubtree(int indentAmt)
-    {
+    public void displaySubtree(int indentAmt) {
         printIndented("UnaryOp[" + op + "](", indentAmt);
         expr.displaySubtree(indentAmt + 2);
         printIndented(")", indentAmt);
@@ -74,27 +71,24 @@ public final class UnaryOpNode extends SyntaxNode
         val = expr.evaluate(env);
 
         // Perform the operation based on the type.
-        switch (op)
-        {
-        case NOT:
-            if (!(val instanceof Boolean))
-            {
-                logError("Boolean expected.");
+        switch (op) {
+            case NOT:
+                if (!(val instanceof Boolean)) {
+                    logError("Boolean expected.");
+                    throw new EvaluationException();
+                }
+                return !((Boolean) val);
+            case SUB:
+                if (!(val instanceof Integer) && !(val instanceof Double)) {
+                    logError("Integer or real expected.");
+                    throw new EvaluationException();
+                }
+                if (val instanceof Integer)
+                    return -1 * (Integer) val;
+                else
+                    return -1 * (Double) val;
+            default:
                 throw new EvaluationException();
-            }
-            return !((Boolean) val);
-        case SUB:
-            if (!(val instanceof Integer) && !(val instanceof Double))
-            {
-                logError("Integer or real expected.");
-                throw new EvaluationException();
-            }
-            if (val instanceof Integer)
-                return -1 * (Integer) val;
-            else 
-                return -1 * (Double) val;
-        default:
-            throw new EvaluationException();
         }
     }
 
@@ -109,7 +103,32 @@ public final class UnaryOpNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        // Determine the type of the operand
+        Type exprType = expr.typeOf(tenv, inferencer);
+
+        switch (op) {
+            case NOT:
+                // Unary NOT must operate on a BoolType
+                inferencer.unify(exprType, new ast.typesystem.types.BoolType(),
+                        "Unary 'not' requires a boolean operand.");
+                return new ast.typesystem.types.BoolType();
+
+            case SUB:
+                // Unary negation must operate on Int or Real types
+                // Unify with a fresh type variable and check if it’s Int or Real
+                Type t = tenv.getTypeVariable();
+                inferencer.unify(exprType, t, "Unary '-' requires numeric operand.");
+                // Apply substitution after unification
+                t = inferencer.getSubstitutions().apply(t);
+
+                if (t instanceof ast.typesystem.types.IntType ||
+                        t instanceof ast.typesystem.types.RealType)
+                    return t;
+                else
+                    throw new TypeException("Unary '-' requires Int or Real type, found " + t);
+
+            default:
+                throw new TypeException("Unknown unary operation: " + op);
+        }
     }
 }
