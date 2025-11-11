@@ -29,8 +29,7 @@ import lexer.TokenType;
  * 
  * @author Zach Kissel
  */
-public final class RelOpNode extends SyntaxNode
-{
+public final class RelOpNode extends SyntaxNode {
     private TokenType op;
     private SyntaxNode leftExpr;
     private SyntaxNode rightExpr;
@@ -44,8 +43,7 @@ public final class RelOpNode extends SyntaxNode
      * @param line  the line of code the node is associated with.
      */
     public RelOpNode(SyntaxNode lexpr, TokenType op, SyntaxNode rexpr,
-            long line)
-    {
+            long line) {
         super(line);
         this.op = op;
         this.leftExpr = lexpr;
@@ -57,8 +55,7 @@ public final class RelOpNode extends SyntaxNode
      * 
      * @param indentAmt the amout of indentation to perform.
      */
-    public void displaySubtree(int indentAmt)
-    {
+    public void displaySubtree(int indentAmt) {
         printIndented("RelOp[" + op + "](", indentAmt);
         leftExpr.displaySubtree(indentAmt + 2);
         rightExpr.displaySubtree(indentAmt + 2);
@@ -86,8 +83,7 @@ public final class RelOpNode extends SyntaxNode
                 && !(rval instanceof Double || rval instanceof Integer))
             throw new EvaluationException();
 
-        if (lval.getClass() != rval.getClass())
-        {
+        if (lval.getClass() != rval.getClass()) {
             logError("mixed type expression.");
             return null;
         }
@@ -96,30 +92,29 @@ public final class RelOpNode extends SyntaxNode
             useDouble = true;
 
         // Perform the operation base on the type.
-        switch (op)
-        {
-        case LT:
-            if (useDouble)
-                return (Double) lval < (Double) rval;
-            return (Integer) lval < (Integer) rval;
-        case LTE:
-            if (useDouble)
-                return (Double) lval <= (Double) rval;
-            return (Integer) lval <= (Integer) rval;
-        case GT:
-            if (useDouble)
-                return (Double) lval > (Double) rval;
-            return (Integer) lval > (Integer) rval;
-        case GTE:
-            if (useDouble)
-                return (Double) lval >= (Double) rval;
-            return (Integer) lval >= (Integer) rval;
-        case EQ:
-            return lval.equals(rval);
-        case NEQ:
-            return !(lval.equals(rval));
-        default:
-            throw new EvaluationException();
+        switch (op) {
+            case LT:
+                if (useDouble)
+                    return (Double) lval < (Double) rval;
+                return (Integer) lval < (Integer) rval;
+            case LTE:
+                if (useDouble)
+                    return (Double) lval <= (Double) rval;
+                return (Integer) lval <= (Integer) rval;
+            case GT:
+                if (useDouble)
+                    return (Double) lval > (Double) rval;
+                return (Integer) lval > (Integer) rval;
+            case GTE:
+                if (useDouble)
+                    return (Double) lval >= (Double) rval;
+                return (Integer) lval >= (Integer) rval;
+            case EQ:
+                return lval.equals(rval);
+            case NEQ:
+                return !(lval.equals(rval));
+            default:
+                throw new EvaluationException();
         }
     }
 
@@ -134,7 +129,25 @@ public final class RelOpNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        // Infer operand types
+        Type leftType = leftExpr.typeOf(tenv, inferencer);
+        Type rightType = rightExpr.typeOf(tenv, inferencer);
+
+        // Unify them
+        inferencer.unify(leftType, rightType, "Relational operand type mismatch");
+
+        // Apply the substitution map
+        leftType = inferencer.getSubstitutions().apply(leftType);
+        rightType = inferencer.getSubstitutions().apply(rightType);
+
+        // Check numeric types
+        if (leftType instanceof ast.typesystem.types.IntType
+                || leftType instanceof ast.typesystem.types.RealType) {
+            // All relational operators return BoolType
+            return new ast.typesystem.types.BoolType();
+        } else {
+            throw new TypeException(buildErrorMessage(
+                    "Relational operators require Int or Real types, got: " + leftType));
+        }
     }
 }
