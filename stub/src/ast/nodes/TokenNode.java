@@ -94,7 +94,37 @@ public final class TokenNode extends SyntaxNode {
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        // Determine the type based on the token type
+        switch (token.getType()) {
+            case INT:
+                // Integer literal has IntType
+                return new ast.typesystem.types.IntType();
+                
+            case REAL:
+                // Real number literal has RealType
+                return new ast.typesystem.types.RealType();
+                
+            case TRUE:
+            case FALSE:
+                // Boolean literals have BoolType
+                return new ast.typesystem.types.BoolType();
+                
+            case ID:
+                // Identifier - look up its type in the type environment
+                Type idType = tenv.lookup(token);
+                
+                // If the identifier is not found in the type environment, throw an exception
+                if (idType == null) {
+                    throw new TypeException(buildErrorMessage(
+                        "Undefined identifier: " + token.getValue()));
+                }
+                
+                return idType;
+                
+            default:
+                // Unknown token type - throw an exception
+                throw new TypeException(buildErrorMessage(
+                    "Unknown token type: " + token.getType()));
+        }
     }
 }
