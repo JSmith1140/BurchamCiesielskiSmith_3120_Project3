@@ -104,7 +104,18 @@ public final class LetNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        Type boundType = varExpr.typeOf(tenv, inferencer);
+
+        Type appliedType = inferencer.getSubstitutions().apply(boundType);
+
+        TypeEnvironment localEnv = tenv.copy();
+
+        localEnv.updateEnvironment(var, appliedType);
+
+        Type bodyType = expr.typeOf(localEnv, inferencer);
+
+        Type resultType = inferencer.getSubstitutions().apply(bodyType);
+
+        return resultType;
     }
 }
