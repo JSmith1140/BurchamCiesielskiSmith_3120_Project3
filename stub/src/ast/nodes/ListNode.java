@@ -48,13 +48,24 @@ public class ListNode extends SyntaxNode {
     }
 
     @Override
-    public Type typeOf(TypeEnvironment tenv, Inferencer inferencer){
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'evaluate'");
-        
+    public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException{
+        if (exprs.isEmpty()) {
+            Type elemType = tenv.getTypeVariable();
+            return new ast.typesystem.types.ListType(elemType);
+        }
+
+        SyntaxNode firstNode = exprs.getFirst();
+        Type firstType = firstNode.typeOf(tenv, inferencer);
+
+        for (int i = 1; i < exprs.size(); i++) {
+            SyntaxNode node = exprs.get(i);
+            Type nodeType = node.typeOf(tenv, inferencer);
+
+            inferencer.unify(firstType, nodeType, "All elements in a list must have the same type.");
+        }
+
+        Type elementType = inferencer.getSubstitutions().apply(firstType);
+
+        return new ast.typesystem.types.ListType(elementType);
     }
 }
-
-
-
-
