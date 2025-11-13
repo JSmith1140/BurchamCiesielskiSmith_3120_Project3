@@ -91,7 +91,12 @@ public final class ValNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'typeOf'");
+        Type exprType = expr.typeOf(tenv, inferencer);
+
+        Type appliedType = inferencer.getSubstitutions().apply(exprType);
+
+        tenv.updateEnvironment(name, appliedType);
+
+        return appliedType;
     }
 }
