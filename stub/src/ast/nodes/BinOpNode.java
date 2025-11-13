@@ -71,76 +71,66 @@ public final class BinOpNode extends SyntaxNode {
      */
     @Override
     public Object evaluate(Environment env) throws EvaluationException {
-        Object lval;
-        Object rval;
-        boolean useDouble = false;
+        Object lval = leftTerm.evaluate(env);
+        Object rval = rightTerm.evaluate(env);
 
-        lval = leftTerm.evaluate(env);
-        rval = rightTerm.evaluate(env);
+        if (op == TokenType.CONCAT) {
+            if (lval instanceof java.util.List<?> leftList && rval instanceof java.util.List<?> rightList) {
+                if (!leftList.isEmpty() && !rightList.isEmpty()) {
+                    Class<?> leftType = leftList.get(0).getClass();
+                    Class<?> rightType = rightList.get(0).getClass();
+                    if (!leftType.equals(rightType)) {
+                        logError("Error: Concatenation requires lists of the same element type.");
+                        throw new EvaluationException();
+                    }
+                }
+                java.util.List<Object> newList = new java.util.ArrayList<>(leftList);
+                newList.addAll(rightList);
+                return newList;
+            } else {
+                logError("Error: Concatenation requires two list operands.");
+                throw new EvaluationException();
+            }
+        }
 
-        // Make sure the type is sound.
-        if (!(lval instanceof Integer || lval instanceof Double
-                || lval instanceof Boolean)
-                && !(rval instanceof Double || rval instanceof Integer
-                        || lval instanceof Boolean))
-            throw new EvaluationException();
-
-        if (lval.getClass() != rval.getClass()) {
-            logError("mixed type expression.");
+        if (!(lval instanceof Integer || lval instanceof Double || lval instanceof Boolean) ||
+            !(rval instanceof Integer || rval instanceof Double || rval instanceof Boolean)) {
+            logError("Invalid operands for binary operation.");
             throw new EvaluationException();
         }
-        if (lval instanceof Double)
-            useDouble = true;
 
-        // Perform the operation base on the type.
+        boolean useDouble = (lval instanceof Double || rval instanceof Double);
+
         switch (op) {
             case ADD:
                 if (useDouble)
-                    return (Double) lval + (Double) rval;
-                return (Integer) lval + (Integer) rval;
+                    return ((Number) lval).doubleValue() + ((Number) rval).doubleValue();
+                return ((Number) lval).intValue() + ((Number) rval).intValue();
             case SUB:
                 if (useDouble)
-                    return (Double) lval - (Double) rval;
-                return (Integer) lval - (Integer) rval;
+                    return ((Number) lval).doubleValue() - ((Number) rval).doubleValue();
+                return ((Number) lval).intValue() - ((Number) rval).intValue();
             case MULT:
                 if (useDouble)
-                    return (Double) lval * (Double) rval;
-                return (Integer) lval * (Integer) rval;
+                    return ((Number) lval).doubleValue() * ((Number) rval).doubleValue();
+                return ((Number) lval).intValue() * ((Number) rval).intValue();
             case DIV:
                 if (useDouble)
-                    return (Double) lval / (Double) rval;
-                return (Integer) lval / (Integer) rval;
+                    return ((Number) lval).doubleValue() / ((Number) rval).doubleValue();
+                return ((Number) lval).intValue() / ((Number) rval).intValue();
             case MOD:
                 if (useDouble) {
                     logError("Error: Mod requires integer arguments.");
                     throw new EvaluationException();
                 }
-                return (Integer) lval % (Integer) rval;
+                return ((Integer) lval) % ((Integer) rval);
             case AND:
-                return (Boolean) lval && (Boolean) rval;
+                return ((Boolean) lval) && ((Boolean) rval);
             case OR:
-                return (Boolean) lval || (Boolean) rval;
-            case CONCAT:
-                if (lval instanceof java.util.List<?> leftList && rval instanceof java.util.List<?> rightList) {
-                    if (!leftList.isEmpty() && !rightList.isEmpty()) {
-                        Class<?> leftType = leftList.get(0).getClass();
-                        Class<?> rightType = rightList.get(0).getClass();
-                        if (!leftType.equals(rightType)) {
-                            logError("Error: Concatenation requires two lists of the same element type.");
-                            throw new EvaluationException();
-                        }
-                    }
-                    java.util.List<Object> newList = new java.util.ArrayList<>(leftList);
-                    newList.addAll(rightList);
-                    return newList;
-                } else {
-                    logError("Error: Concatenation requires two lists of the same element type.");
-                    throw new EvaluationException();
-                }
+                return ((Boolean) lval) || ((Boolean) rval);
             default:
                 throw new EvaluationException();
         }
-
     }
 
     /**
