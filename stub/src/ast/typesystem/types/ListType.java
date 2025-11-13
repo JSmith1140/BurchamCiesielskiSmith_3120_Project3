@@ -78,6 +78,6 @@ public final class ListType extends Type
     @Override
     public String toString()
     {
-        return "[" + elementType.toString() + "]";
+        return "[ " + elementType.toString() + " ]";
     }
 }
