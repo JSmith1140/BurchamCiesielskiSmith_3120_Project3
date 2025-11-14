@@ -104,18 +104,25 @@ public final class LetNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
+        // Determine the type of the variable expression
         Type boundType = varExpr.typeOf(tenv, inferencer);
 
+        // Apply any substitutions inferred so far to the bound type
         Type appliedType = inferencer.getSubstitutions().apply(boundType);
 
+        // Create a copy
         TypeEnvironment localEnv = tenv.copy();
 
+        // Add the variable with its inferred type to the local environment
         localEnv.updateEnvironment(var, appliedType);
 
+        // Determine the type of the body expression using the updated environment
         Type bodyType = expr.typeOf(localEnv, inferencer);
 
+        // Apply any substitutions to the body type to get the result type
         Type resultType = inferencer.getSubstitutions().apply(bodyType);
 
+        // return the result type
         return resultType;
     }
 }
