@@ -75,14 +75,17 @@ public class ListNode extends SyntaxNode {
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException{
+        // Handle the empty list case by creating a new type variable for the element type
         if (exprs.isEmpty()) {
             Type elemType = tenv.getTypeVariable();
             return new ast.typesystem.types.ListType(elemType);
         }
 
+        // Determine the type of the first element
         SyntaxNode firstNode = exprs.getFirst();
         Type firstType = firstNode.typeOf(tenv, inferencer);
 
+        // Ensure all other elements unify with the type of the first element
         for (int i = 1; i < exprs.size(); i++) {
             SyntaxNode node = exprs.get(i);
             Type nodeType = node.typeOf(tenv, inferencer);
@@ -90,8 +93,10 @@ public class ListNode extends SyntaxNode {
             inferencer.unify(firstType, nodeType, "All elements in a list must have the same type.");
         }
 
+        // Apply any substitutions resulting from unification to get the final element type
         Type elementType = inferencer.getSubstitutions().apply(firstType);
 
+        // Return the type of the list as a ListType of the element type
         return new ast.typesystem.types.ListType(elementType);
     }
 }
