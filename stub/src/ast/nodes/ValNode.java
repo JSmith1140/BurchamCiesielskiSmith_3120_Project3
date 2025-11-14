@@ -91,12 +91,16 @@ public final class ValNode extends SyntaxNode
      */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException {
+        // Determine the type of the expression
         Type exprType = expr.typeOf(tenv, inferencer);
 
+        // Apply any substitutions from the inferencer to the expression type
         Type appliedType = inferencer.getSubstitutions().apply(exprType);
 
+        // update the enviornment
         tenv.updateEnvironment(name, appliedType);
 
+        // return the applied type
         return appliedType;
     }
 }
