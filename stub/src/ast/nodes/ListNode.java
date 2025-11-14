@@ -13,11 +13,22 @@ import environment.TypeEnvironment;
 public class ListNode extends SyntaxNode {
     private LinkedList<SyntaxNode> exprs;
 
+    /**
+     * Constructor for a ListNode.
+     * 
+     * @param exprs The list of expressions that form this list node.
+     * @param line  The line number in the source code (for error reporting).
+     */
     public ListNode(LinkedList<SyntaxNode> exprs, long line) {
         super(line);
         this.exprs = exprs;
     }
 
+    /**
+     * Recursively displays this list node and its children, with indentation.
+     * 
+     * @param indentAmt The number of spaces to indent this node.
+     */
     public void displaySubtree(int indentAmt) {
         printIndented("List[", indentAmt);
         for (SyntaxNode node : exprs)
@@ -27,6 +38,13 @@ public class ListNode extends SyntaxNode {
         printIndented("]", indentAmt);
     }
 
+    /**
+     * Evaluates this list node in the given environment.
+     * 
+     * @param env The runtime environment for variable lookup.
+     * @return A List containing the evaluated elements.
+     * @throws EvaluationException if elements are of different types.
+     */
     @Override
     public Object evaluate(Environment env) throws EvaluationException {
         List<Object> evaluatedList = new LinkedList<>();
@@ -47,6 +65,14 @@ public class ListNode extends SyntaxNode {
         return evaluatedList;
     }
 
+    /**
+     * Infers the type of this list node using the type environment and inferencer.
+     * 
+     * @param tenv       The type environment.
+     * @param inferencer The type inferencer for unification.
+     * @return A ListType representing the type of the list elements.
+     * @throws TypeException if there is a type mismatch among elements.
+     */
     @Override
     public Type typeOf(TypeEnvironment tenv, Inferencer inferencer) throws TypeException{
         if (exprs.isEmpty()) {
